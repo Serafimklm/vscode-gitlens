@@ -988,6 +988,10 @@ export class PatchDetailsWebviewProvider implements WebviewProvider<State, Seria
 		if (this._context.draft?._brand !== 'local') return;
 
 		const patch = this._context.draft.patch;
+		if (patch.baseRef == null) {
+			const ref = this.getPatchBaseRef(patch);
+			if (ref == null) return;
+		}
 
 		const change: Change = {
 			repository: {
