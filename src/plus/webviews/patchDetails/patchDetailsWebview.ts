@@ -122,9 +122,12 @@ export class PatchDetailsWebviewProvider implements WebviewProvider<State, Seria
 	onShowing(
 		_loading: boolean,
 		options: { column?: ViewColumn; preserveFocus?: boolean },
-		...args: [Partial<DraftSelectedEvent['data']> | { state: Partial<Serialized<State>> }] | unknown[]
+		...args:
+			| [Partial<DraftSelectedEvent['data']> | { state: Partial<Serialized<State>> }]
+			| [{ preserveVisibility?: boolean; changes: Change[] }]
+			| unknown[]
 	): boolean {
-		let data: Partial<DraftSelectedEvent['data']> | undefined;
+		let data: Partial<DraftSelectedEvent['data']> | { preserveVisibility?: boolean; changes: Change[] } | undefined;
 
 		const [arg] = args;
 		// if (isSerializedState<Serialized<State>>(arg)) {
@@ -154,15 +157,25 @@ export class PatchDetailsWebviewProvider implements WebviewProvider<State, Seria
 		}
 
 		let draft;
+		let changes: Change[] | undefined;
 		if (data != null) {
 			if (data.preserveFocus) {
 				options.preserveFocus = true;
 			}
-			({ draft, ...data } = data);
+
+			if ('changes' in data) {
+				({ changes, ...data } = data as { preserveVisibility?: boolean; changes: Change[] });
+			} else {
+				({ draft, ...data } = data);
+			}
 		}
 
 		if (draft != null) {
 			this.updateDraft(draft);
+		}
+
+		if (changes != null) {
+			this.updateCreate(changes);
 		}
 
 		if (data?.preserveVisibility && !this.host.visible) return false;
@@ -492,6 +505,12 @@ export class PatchDetailsWebviewProvider implements WebviewProvider<State, Seria
 	// }
 
 	private _commitDisposable: Disposable | undefined;
+
+	private updateCreate(changes: Change[]) {
+		this.updatePendingContext({ mode: 'create', wipStateLoaded: true, create: changes });
+		this.ensureTrackers();
+		this.updateState();
+	}
 
 	private updateDraft(draft: LocalDraft | Draft | undefined, options?: { force?: boolean; immediate?: boolean }) {
 		// // this.commits = [commit];
