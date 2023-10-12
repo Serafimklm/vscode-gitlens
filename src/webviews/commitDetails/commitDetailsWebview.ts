@@ -158,9 +158,9 @@ export class CommitDetailsWebviewProvider implements WebviewProvider<State, Seri
 
 	dispose() {
 		this._disposable.dispose();
-		this._commitTrackerDisposable?.dispose();
 		this._lineTrackerDisposable?.dispose();
 		this._repositorySubscription?.subscription.dispose();
+		this._selectionTrackerDisposable?.dispose();
 		this._wipSubscription?.subscription.dispose();
 	}
 
@@ -338,17 +338,17 @@ export class CommitDetailsWebviewProvider implements WebviewProvider<State, Seri
 		}
 	}
 
-	private _commitTrackerDisposable: Disposable | undefined;
 	private _lineTrackerDisposable: Disposable | undefined;
+	private _selectionTrackerDisposable: Disposable | undefined;
 	private ensureTrackers(): void {
-		this._commitTrackerDisposable?.dispose();
-		this._commitTrackerDisposable = undefined;
+		this._selectionTrackerDisposable?.dispose();
+		this._selectionTrackerDisposable = undefined;
 		this._lineTrackerDisposable?.dispose();
 		this._lineTrackerDisposable = undefined;
 
 		if (!this.host.visible) return;
 
-		this._commitTrackerDisposable = this.container.events.on('commit:selected', this.onCommitSelected, this);
+		this._selectionTrackerDisposable = this.container.events.on('commit:selected', this.onCommitSelected, this);
 
 		if (this._pinned) return;
 
@@ -497,6 +497,7 @@ export class CommitDetailsWebviewProvider implements WebviewProvider<State, Seri
 			repository: {
 				name: e.changes.repository.name,
 				path: e.changes.repository.path,
+				uri: e.changes.repository.uri,
 			},
 			range: {
 				baseSha: 'HEAD',
@@ -797,10 +798,7 @@ export class CommitDetailsWebviewProvider implements WebviewProvider<State, Seri
 
 			files.push(change);
 			if (file.staged && file.wip) {
-				files.push({
-					...change,
-					staged: false,
-				});
+				files.push({ ...change, staged: false });
 			}
 		}
 
