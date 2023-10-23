@@ -506,6 +506,7 @@ export class CommitDetailsWebviewProvider implements WebviewProvider<State, Seri
 			},
 			files: e.changes.files,
 			type: 'wip' as 'commit' | 'wip',
+			checked: e.checked,
 		};
 
 		void showPatchesView({

@@ -497,7 +497,7 @@ export class PatchDetailsWebviewProvider implements WebviewProvider<State, Seria
 					repo,
 					this.onDidChangeRepositoryWip.bind(this),
 				);
-				repoChangeSet.checked = true;
+				repoChangeSet.checked = change.checked ?? true;
 			} else {
 				repoChangeSet = {
 					checked: true,
